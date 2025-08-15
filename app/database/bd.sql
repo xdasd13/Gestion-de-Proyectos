@@ -1,6 +1,5 @@
 CREATE DATABASE gestion_proyectos;
 
-
 USE gestion_proyectos;
 
 -- Tabla de proyectos
