@@ -2,7 +2,7 @@
 $host = "localhost";
 $user = "root";
 $pass = "";
-$db = "gestion_proyectos";
+$db = "sistemaIshume";
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {
