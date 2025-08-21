@@ -114,7 +114,19 @@ $conn->close();
                 <input type="hidden" name="registro" value="1">
                 <div class="row">
                     <div class="col-md-6 mb-3"><input type="text" name="cliente" placeholder="Cliente" class="form-control" required></div>
-                    <div class="col-md-6 mb-3"><input type="text" name="tipo_evento" placeholder="Tipo de evento" class="form-control" required></div>
+                    <div class="col-md-6 mb-3">
+                      <select  name="tipo_evento" class="form-select" required>
+                      <option value="" disabled selected>Selecciona un tipo de evento</option>
+                      <option value="Boda">Boda</option>
+                      <option value="Bautizo">Bautizo</option>
+                      <option value="XV Años">XV Años</option>
+                      <option value="Cumpleaños">Cumpleaños</option>
+                      <option value="Baby Shower">Baby Shower</option>
+                      <option value="Filmación Escolar">Filmación Escolar</option>
+                      <option value="Sesión Fotográfica Escolar">Sesión Fotográfica Escolar</option>
+                      <option value="Otro">Otro</option>
+                    </select>
+                    </div>
                     <div class="col-md-6 mb-3"><input type="date" name="fecha_inicio" class="form-control" required></div>
                     <div class="col-md-6 mb-3"><input type="date" name="fecha_fin" class="form-control" required></div>
                     <div class="col-md-6 mb-3">
