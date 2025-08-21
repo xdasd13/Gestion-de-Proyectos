@@ -1,4 +1,4 @@
-DROP DATABASE sistemaIshume;
+
 CREATE DATABASE sistemaIshume;
 USE sistemaIshume;
 
@@ -245,4 +245,3 @@ CREATE TABLE IF NOT EXISTS contactos (
     profesion VARCHAR(100),
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )ENGINE=INNODB;
-

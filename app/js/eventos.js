@@ -27,3 +27,23 @@ document.querySelectorAll('.kanban-column').forEach(column => {
         });
     });
 });
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.btn-editar').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.preventDefault();
+            const id = btn.dataset.id;
+            const modal = new bootstrap.Modal(document.getElementById('modalEditar'));
+            modal.show();
+
+            const contenedor = document.getElementById('formEditarContenido');
+            contenedor.innerHTML = '<div class="text-center"><div class="spinner-border text-warning"></div></div>';
+
+            fetch(`editar_modal.php?id=${id}`)
+                .then(res => res.text())
+                .then(html => contenedor.innerHTML = html)
+                .catch(err => contenedor.innerHTML = '<div class="alert alert-danger">Error al cargar el formulario.</div>');
+        });
+    });
+});

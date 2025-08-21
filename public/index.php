@@ -9,9 +9,6 @@ if ($conn->connect_error) {
     die("Error de conexión: " . $conn->connect_error);
 }
 
-// =======================
-// Procesar formulario de registro
-// =======================
 $mensaje = "";
 $tipo_alerta = "";
 
@@ -34,11 +31,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['registro'])) {
         $mensaje = "La fecha de fin debe ser posterior a la fecha de inicio.";
         $tipo_alerta = "danger";
     } else {
-        // Evitar duplicados
         $stmt = $conn->prepare("SELECT id FROM proyectos WHERE cliente=? AND tipo_evento=? AND fecha_inicio=?");
         $stmt->bind_param("sss", $cliente, $tipo_evento, $fecha_inicio);
         $stmt->execute();
         $stmt->store_result();
+
         if ($stmt->num_rows > 0) {
             $mensaje = "Este cliente ya tiene un proyecto en esa fecha.";
             $tipo_alerta = "warning";
@@ -46,8 +43,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['registro'])) {
             $stmt = $conn->prepare("INSERT INTO proyectos (cliente, tipo_evento, fecha_inicio, fecha_fin, estado, descripcion) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param("ssssss", $cliente, $tipo_evento, $fecha_inicio, $fecha_fin, $estado, $descripcion);
             if ($stmt->execute()) {
-                $mensaje = "Proyecto registrado exitosamente.";
-                $tipo_alerta = "success";
+                // 🔁 Redirigir tras éxito
+                header("Location: index.php?success=1");
+                exit;
             } else {
                 $mensaje = "Error: " . $stmt->error;
                 $tipo_alerta = "danger";
@@ -57,22 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['registro'])) {
     }
 }
 
-// =======================
-// API interna para actualizar estado vía AJAX
-// =======================
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cambiar_estado'])) {
-    $id = intval($_POST['id']);
-    $nuevo_estado = $_POST['nuevo_estado'];
-    $stmt = $conn->prepare("UPDATE proyectos SET estado=? WHERE id=?");
-    $stmt->bind_param("si", $nuevo_estado, $id);
-    $stmt->execute();
-    echo json_encode(["success" => true]);
-    exit;
-}
 
-// =======================
-// Obtener proyectos por estado
-// =======================
 $estados = ["Planificación", "Producción", "Postproducción", "Finalizado"];
 $proyectos_por_estado = [];
 
@@ -95,9 +78,8 @@ $conn->close();
     <style>
         .kanban-board { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; }
         .kanban-column { background: #f8f9fa; border-radius: 8px; flex: 1; min-width: 250px; padding: 10px; }
-        .kanban-card { background: white; border-radius: 6px; padding: 10px; margin-bottom: 10px; cursor: grab; }
-        .kanban-card.dragging { opacity: 0.5; }
-        .kanban-column.drag-over { background: #e3f2fd; }
+        .kanban-card { background: white; border-radius: 6px; padding: 10px; margin-bottom: 10px; cursor: grab; position: relative; }
+        .iconos-accion { position: absolute; top: 5px; right: 10px; }
     </style>
 </head>
 <body class="bg-light">
@@ -115,17 +97,17 @@ $conn->close();
                 <div class="row">
                     <div class="col-md-6 mb-3"><input type="text" name="cliente" placeholder="Cliente" class="form-control" required></div>
                     <div class="col-md-6 mb-3">
-                      <select  name="tipo_evento" class="form-select" required>
-                      <option value="" disabled selected>Selecciona un tipo de evento</option>
-                      <option value="Boda">Boda</option>
-                      <option value="Bautizo">Bautizo</option>
-                      <option value="XV Años">XV Años</option>
-                      <option value="Cumpleaños">Cumpleaños</option>
-                      <option value="Baby Shower">Baby Shower</option>
-                      <option value="Filmación Escolar">Filmación Escolar</option>
-                      <option value="Sesión Fotográfica Escolar">Sesión Fotográfica Escolar</option>
-                      <option value="Otro">Otro</option>
-                    </select>
+                        <select name="tipo_evento" class="form-select" required>
+                            <option value="" disabled selected>Selecciona un tipo de evento</option>
+                            <option value="Boda">Boda</option>
+                            <option value="Bautizo">Bautizo</option>
+                            <option value="XV Años">XV Años</option>
+                            <option value="Cumpleaños">Cumpleaños</option>
+                            <option value="Baby Shower">Baby Shower</option>
+                            <option value="Filmación Escolar">Filmación Escolar</option>
+                            <option value="Sesión Fotográfica Escolar">Sesión Fotográfica Escolar</option>
+                            <option value="Otro">Otro</option>
+                        </select>
                     </div>
                     <div class="col-md-6 mb-3"><input type="date" name="fecha_inicio" class="form-control" required></div>
                     <div class="col-md-6 mb-3"><input type="date" name="fecha_fin" class="form-control" required></div>
@@ -151,6 +133,10 @@ $conn->close();
                 <h5 class="text-center mb-3"><?= $estado ?></h5>
                 <?php foreach ($proyectos_por_estado[$estado] as $proyecto): ?>
                     <div class="kanban-card" draggable="true" data-id="<?= $proyecto['id'] ?>">
+                        <div class="iconos-accion">
+                            <a href="editar_modal.php" class="text-primary btn-editar me-2" data-id="<?= $proyecto['id'] ?>" title="Editar">✏️</a>
+                            <a href="eliminar.php?id=<?= $proyecto['id'] ?>" class="text-danger" onclick="return confirm('¿Eliminar este proyecto?')">🗑️</a>
+                        </div>
                         <h6><?= htmlspecialchars($proyecto['cliente']) ?></h6>
                         <small><?= htmlspecialchars($proyecto['tipo_evento']) ?></small>
                         <p class="mb-1"><strong>Inicio:</strong> <?= $proyecto['fecha_inicio'] ?></p>
@@ -162,6 +148,21 @@ $conn->close();
         <?php endforeach; ?>
     </div>
 </div>
-</body>
+
+<!-- Modal -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header bg-warning text-white">
+      <h5 class="modal-title" id="modalEditarLabel">Editar Proyecto</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body" id="formEditarContenido">
+      <div class="text-center"><div class="spinner-border text-warning"></div></div>
+    </div>
+  </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../app/js/eventos.js"></script>
+</body>
 </html>
