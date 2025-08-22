@@ -47,3 +47,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+function mostrarCampoOtro(select) {
+    const campoOtro = document.getElementById('campo_otro_evento');
+    const inputOtro = document.getElementById('otro_evento');
+
+    if (select.value === 'Otro') {
+        campoOtro.style.display = 'block';
+        inputOtro.setAttribute('required', true);
+    } else {
+        campoOtro.style.display = 'none';
+        inputOtro.removeAttribute('required');
+        inputOtro.value = '';
+    }
+}
+
+// Validación extra para copiar valor de "Otro"
+function validarFormulario() {
+    const tipoEvento = document.getElementById('tipo_evento');
+    const inputOtro = document.getElementById('otro_evento');
+
+    if (tipoEvento.value === 'Otro') {
+        inputOtro.setAttribute('name', 'tipo_evento'); // Forzar que se envíe como tipo_evento
+    }
+
+    return true;
+}

@@ -13,7 +13,7 @@ $mensaje = "";
 $tipo_alerta = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['registro'])) {
-    $cliente = trim($_POST['cliente']);
+    $cliente = trim($_POST['cliente']); 
     $tipo_evento = trim($_POST['tipo_evento']);
     $fecha_inicio = $_POST['fecha_inicio'];
     $fecha_fin = $_POST['fecha_fin'];
@@ -80,48 +80,90 @@ $conn->close();
         .kanban-column { background: #f8f9fa; border-radius: 8px; flex: 1; min-width: 250px; padding: 10px; }
         .kanban-card { background: white; border-radius: 6px; padding: 10px; margin-bottom: 10px; cursor: grab; position: relative; }
         .iconos-accion { position: absolute; top: 5px; right: 10px; }
+        .form-kanban-width {
+            max-width: 100vw;
+            width: 100%;
+        }
+        @media (min-width: 992px) {
+            .form-kanban-width {
+                width: 100%;
+                min-width: 0;
+            }
+        }
     </style>
 </head>
 <body class="bg-light">
 <div class="container mt-4">
-
     <!-- Formulario -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white text-center">Registrar Proyecto</div>
-        <div class="card-body">
-            <?php if (!empty($mensaje)): ?>
-                <div class="alert alert-<?= $tipo_alerta ?>"><?= $mensaje ?></div>
-            <?php endif; ?>
-            <form method="POST">
-                <input type="hidden" name="registro" value="1">
-                <div class="row">
-                    <div class="col-md-6 mb-3"><input type="text" name="cliente" placeholder="Cliente" class="form-control" required></div>
-                    <div class="col-md-6 mb-3">
-                        <select name="tipo_evento" class="form-select" required>
-                            <option value="" disabled selected>Selecciona un tipo de evento</option>
-                            <option value="Boda">Boda</option>
-                            <option value="Bautizo">Bautizo</option>
-                            <option value="XV Años">XV Años</option>
-                            <option value="Cumpleaños">Cumpleaños</option>
-                            <option value="Baby Shower">Baby Shower</option>
-                            <option value="Filmación Escolar">Filmación Escolar</option>
-                            <option value="Sesión Fotográfica Escolar">Sesión Fotográfica Escolar</option>
-                            <option value="Otro">Otro</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 mb-3"><input type="date" name="fecha_inicio" class="form-control" required></div>
-                    <div class="col-md-6 mb-3"><input type="date" name="fecha_fin" class="form-control" required></div>
-                    <div class="col-md-6 mb-3">
-                        <select name="estado" class="form-select">
-                            <?php foreach ($estados as $estado): ?>
-                                <option value="<?= $estado ?>"><?= $estado ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-12 mb-3"><textarea name="descripcion" placeholder="Descripción" class="form-control"></textarea></div>
+    <div class="row justify-content-center">
+        <div class="form-kanban-width">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-0"><i class="bi bi-journal-plus me-2"></i>Registrar Proyecto</h4>
                 </div>
-                <button type="submit" class="btn btn-primary">Registrar</button>
-            </form>
+                <div class="card-body p-4">
+                    <?php if (!empty($mensaje)): ?>
+                        <div class="alert alert-<?= $tipo_alerta ?> mb-4 text-center"><?= $mensaje ?></div>
+                    <?php endif; ?>
+                    <form method="POST" onsubmit="return validarFormulario()">
+                        <input type="hidden" name="registro" value="1">
+                        <div class="row g-3">
+                            <!-- Cliente solo texto -->
+                            <div class="col-md-6 form-floating">
+                                <input type="text" id="cliente" name="cliente" class="form-control" placeholder="Cliente" required pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo letras y espacios" value="<?= isset($_POST['cliente']) ? htmlspecialchars($_POST['cliente']) : '' ?>">
+                                <label for="cliente">Cliente</label>
+                            </div>
+                            <!-- Tipo de Evento -->
+                            <div class="col-md-6 form-floating">
+                                <select id="tipo_evento" name="tipo_evento" class="form-select" required onchange="mostrarCampoOtro(this)">
+                                    <option value="" disabled <?= !isset($_POST['tipo_evento']) ? 'selected' : '' ?>>Selecciona un tipo de evento</option>
+                                    <option value="Boda" <?= (isset($_POST['tipo_evento']) && $_POST['tipo_evento'] == 'Boda') ? 'selected' : '' ?>>Boda</option>
+                                    <option value="Bautizo" <?= (isset($_POST['tipo_evento']) && $_POST['tipo_evento'] == 'Bautizo') ? 'selected' : '' ?>>Bautizo</option>
+                                    <option value="XV Años" <?= (isset($_POST['tipo_evento']) && $_POST['tipo_evento'] == 'XV Años') ? 'selected' : '' ?>>XV Años</option>
+                                    <option value="Cumpleaños" <?= (isset($_POST['tipo_evento']) && $_POST['tipo_evento'] == 'Cumpleaños') ? 'selected' : '' ?>>Cumpleaños</option>
+                                    <option value="Baby Shower" <?= (isset($_POST['tipo_evento']) && $_POST['tipo_evento'] == 'Baby Shower') ? 'selected' : '' ?>>Baby Shower</option>
+                                    <option value="Filmación Escolar" <?= (isset($_POST['tipo_evento']) && $_POST['tipo_evento'] == 'Filmación Escolar') ? 'selected' : '' ?>>Filmación Escolar</option>
+                                    <option value="Sesión Fotográfica Escolar" <?= (isset($_POST['tipo_evento']) && $_POST['tipo_evento'] == 'Sesión Fotográfica Escolar') ? 'selected' : '' ?>>Sesión Fotográfica Escolar</option>
+                                    <option value="Otro" <?= (isset($_POST['tipo_evento']) && $_POST['tipo_evento'] == 'Otro') ? 'selected' : '' ?>>Otro</option>
+                                </select>
+                                <label for="tipo_evento">Tipo de Evento</label>
+                            </div>
+                            <!-- Campo "Otro" -->
+                            <div class="col-md-12 form-floating" id="campo_otro_evento" style="display: none;">
+                                <input type="text" id="otro_evento" class="form-control" placeholder="Especifica el tipo de evento" value="<?= isset($_POST['otro_evento']) ? htmlspecialchars($_POST['otro_evento']) : '' ?>">
+                                <label for="otro_evento">Especifica el tipo de evento</label>
+                            </div>
+                            <!-- Fechas -->
+                            <div class="col-md-6 form-floating">
+                                <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" placeholder="Fecha de Inicio" required value="<?= isset($_POST['fecha_inicio']) ? $_POST['fecha_inicio'] : '' ?>">
+                                <label for="fecha_inicio">Fecha de Inicio</label>
+                            </div>
+                            <div class="col-md-6 form-floating">
+                                <input type="date" name="fecha_fin" id="fecha_fin" class="form-control" placeholder="Fecha de Fin" required value="<?= isset($_POST['fecha_fin']) ? $_POST['fecha_fin'] : '' ?>">
+                                <label for="fecha_fin">Fecha de Fin</label>
+                            </div>
+                            <!-- Estado -->
+                            <div class="col-md-6 form-floating">
+                                <select name="estado" id="estado" class="form-select" required placeholder="Estado">
+                                    <?php foreach ($estados as $estado): ?>
+                                        <option value="<?= $estado ?>" <?= (isset($_POST['estado']) && $_POST['estado'] == $estado) ? 'selected' : '' ?>><?= $estado ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <label for="estado">Estado</label>
+                            </div>
+                            <!-- Descripción -->
+                            <div class="col-md-12 form-floating">
+                                <textarea name="descripcion" id="descripcion" class="form-control" placeholder="Descripción del proyecto" style="height: 100px"><?= isset($_POST['descripcion']) ? htmlspecialchars($_POST['descripcion']) : '' ?></textarea>
+                                <label for="descripcion">Descripción</label>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-4 gap-2">
+                            <button type="button" class="btn btn-secondary px-4" onclick="limpiarFormulario()"><i class="bi bi-eraser me-2"></i>Limpiar registro</button>
+                            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-plus-circle me-2"></i>Registrar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -163,6 +205,67 @@ $conn->close();
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <script src="../app/js/eventos.js"></script>
+<script>
+function limpiarFormulario() {
+    const form = document.querySelector('form[method="POST"]');
+    form.reset();
+    // Limpiar selects con floating label
+    document.getElementById('tipo_evento').selectedIndex = 0;
+    document.getElementById('estado').selectedIndex = 0;
+    // Limpiar campo otro si está visible
+    document.getElementById('campo_otro_evento').style.display = 'none';
+    // Limpiar min y value de fecha fin
+    document.getElementById('fecha_fin').min = '';
+    document.getElementById('fecha_fin').value = '';
+    // Limpiar los valores de los campos que se mantienen por PHP
+    document.getElementById('cliente').value = '';
+    document.getElementById('fecha_inicio').value = '';
+    document.getElementById('descripcion').value = '';
+    // Ocultar mensaje de alerta si existe
+    const alerta = document.querySelector('.alert');
+    if (alerta) alerta.remove();
+}
+</script>
+<script>
+// Validación de fechas en el formulario
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaInicio = document.getElementById('fecha_inicio');
+    const fechaFin = document.getElementById('fecha_fin');
+
+    // Limitar fecha de inicio hasta el 31 de diciembre del año actual
+    const hoy = new Date();
+    const finDiciembre = new Date(hoy.getFullYear(), 11, 31); // Mes 11 = diciembre
+    fechaInicio.max = finDiciembre.toISOString().split('T')[0];
+
+    // Cuando cambia la fecha de inicio, ajustar el mínimo de fecha de fin y autocompletar el valor
+    fechaInicio.addEventListener('change', function() {
+        if (fechaInicio.value) {
+            const inicio = new Date(fechaInicio.value);
+            // Sumar 14 días (2 semanas)
+            const minFin = new Date(inicio.getTime() + 14 * 24 * 60 * 60 * 1000);
+            const minFinStr = minFin.toISOString().split('T')[0];
+            fechaFin.min = minFinStr;
+            fechaFin.value = minFinStr;
+        } else {
+            fechaFin.min = '';
+            fechaFin.value = '';
+        }
+    });
+
+    // Inicializar el mínimo de fecha fin si ya hay valor en fecha inicio
+    if (fechaInicio.value) {
+        const inicio = new Date(fechaInicio.value);
+        const minFin = new Date(inicio.getTime() + 14 * 24 * 60 * 60 * 1000);
+        const minFinStr = minFin.toISOString().split('T')[0];
+        fechaFin.min = minFinStr;
+        if (!fechaFin.value || fechaFin.value < minFinStr) {
+            fechaFin.value = minFinStr;
+        }
+    }
+});
+</script>
 </body>
 </html>
