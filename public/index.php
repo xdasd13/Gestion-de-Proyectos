@@ -175,10 +175,6 @@ $conn->close();
                 <h5 class="text-center mb-3"><?= $estado ?></h5>
                 <?php foreach ($proyectos_por_estado[$estado] as $proyecto): ?>
                     <div class="kanban-card" draggable="true" data-id="<?= $proyecto['id'] ?>">
-                        <div class="iconos-accion">
-                            <a href="editar_modal.php" class="text-primary btn-editar me-2" data-id="<?= $proyecto['id'] ?>" title="Editar">✏️</a>
-                            <a href="eliminar.php?id=<?= $proyecto['id'] ?>" class="text-danger" onclick="return confirm('¿Eliminar este proyecto?')">🗑️</a>
-                        </div>
                         <h6><?= htmlspecialchars($proyecto['cliente']) ?></h6>
                         <small><?= htmlspecialchars($proyecto['tipo_evento']) ?></small>
                         <p class="mb-1"><strong>Inicio:</strong> <?= $proyecto['fecha_inicio'] ?></p>
